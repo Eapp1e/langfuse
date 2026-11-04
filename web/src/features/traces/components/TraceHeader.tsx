@@ -19,6 +19,9 @@ import {
   hasBreakdown,
 } from "@/src/features/traces/components/ObservationMetadataBadgesTooltip";
 import { CollapsibleBadgeRow } from "@/src/features/traces/components/CollapsibleBadgeRow";
+import { CorrectedPresenceBadge } from "@/src/features/traces/components/CorrectedPresenceBadge";
+import { scrollToCorrectedOutput } from "@/src/features/traces/components/correctedOutputFocus";
+import { useSelection } from "@/src/features/traces/contexts/SelectionProvider";
 import { useTraceData } from "@/src/features/traces/contexts/TraceDataProvider";
 import { useViewPreferences } from "@/src/features/traces/contexts/ViewPreferencesProvider";
 import { aggregateTraceMetrics } from "@/src/features/traces/fns/traceAggregation";
@@ -69,7 +72,8 @@ function TraceHeaderLoading() {
 }
 
 function LoadedTraceHeader() {
-  const { trace, observations, mergedScores } = useTraceData();
+  const { trace, observations, mergedScores, corrections } = useTraceData();
+  const { setSelectedTab } = useSelection();
   const [showAllTags, setShowAllTags] = useState(false);
   const topicFacets = useTraceTopicFacets(trace);
   const handleShowFewerTags = () => {
@@ -85,6 +89,17 @@ function LoadedTraceHeader() {
     () => mergedScores.filter((score) => score.observationId === null),
     [mergedScores],
   );
+
+  // CORRECTIONs stay out of mergedScores; presence comes from corrections only.
+  const hasTraceLevelCorrection = useMemo(
+    () => corrections.some((correction) => !correction.observationId),
+    [corrections],
+  );
+
+  const handleCorrectedPresenceClick = () => {
+    setSelectedTab("preview");
+    scrollToCorrectedOutput();
+  };
 
   const visibleTags = showAllTags
     ? trace.tags
@@ -135,10 +150,15 @@ function LoadedTraceHeader() {
             )}
           </TraceTopicsHoverCard>
         )}
-        {(traceScores.length > 0 || trace.tags.length > 0) && (
+        {(traceScores.length > 0 ||
+          hasTraceLevelCorrection ||
+          trace.tags.length > 0) && (
           <div className="flex min-w-0 flex-wrap items-center gap-1">
             {traceScores.length > 0 && (
               <GroupedScoreBadges scores={traceScores} />
+            )}
+            {hasTraceLevelCorrection && (
+              <CorrectedPresenceBadge onClick={handleCorrectedPresenceClick} />
             )}
             <TagList selectedTags={visibleTags} isLoading={false} viewOnly />
             {hiddenTagCount > 0 && (

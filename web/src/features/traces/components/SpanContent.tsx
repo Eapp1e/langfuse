@@ -30,9 +30,15 @@ import {
   isEmphasizedShare,
   type MetricEmphasisContext,
 } from "@/src/features/traces/fns/metricEmphasis";
+import { CorrectedPresenceBadge } from "@/src/features/traces/components/CorrectedPresenceBadge";
+import { scrollToCorrectedOutput } from "@/src/features/traces/components/correctedOutputFocus";
+import { useSelection } from "@/src/features/traces/contexts/SelectionProvider";
 import { useViewPreferences } from "@/src/features/traces/contexts/ViewPreferencesProvider";
 import { useTraceData } from "@/src/features/traces/contexts/TraceDataProvider";
-import { selectNodeScores } from "@/src/features/traces/fns/nodeScores";
+import {
+  selectNodeCorrections,
+  selectNodeScores,
+} from "@/src/features/traces/fns/nodeScores";
 
 interface SpanContentProps {
   node: TreeNode;
@@ -78,7 +84,8 @@ function LoadedSpanContent({
   surface = "default",
   className,
 }: SpanContentProps) {
-  const { mergedScores } = useTraceData();
+  const { mergedScores, corrections } = useTraceData();
+  const { setSelectedTab } = useSelection();
   const chipColor = surface === "muted" ? "filledOnMuted" : "filled";
   const { showDuration, showCostTokens, showScores, showComments } =
     useViewPreferences();
@@ -116,8 +123,20 @@ function LoadedSpanContent({
 
   const nodeScores = selectNodeScores(mergedScores, node.id);
   const shouldRenderScores = showScores && nodeScores.length > 0;
+  // Obs-scoped CORRECTIONs only — never null-obs (those stay on TraceHeader).
+  const nodeHasCorrection =
+    showScores && selectNodeCorrections(corrections, node.id).length > 0;
 
   const nodeDisplayName = node.name || `Unnamed ${node.type.toLowerCase()}`;
+
+  const handleCorrectedPresenceClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+    onSelect?.();
+    setSelectedTab("preview");
+    scrollToCorrectedOutput();
+  };
 
   return (
     <button
@@ -157,7 +176,9 @@ function LoadedSpanContent({
         </div>
 
         {/* Metrics and scores row */}
-        {(shouldRenderAnyMetrics || shouldRenderScores) && (
+        {(shouldRenderAnyMetrics ||
+          shouldRenderScores ||
+          nodeHasCorrection) && (
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 font-mono">
             {/* Duration (own span) */}
             {shouldRenderDuration ? (
@@ -201,14 +222,22 @@ function LoadedSpanContent({
             ) : null}
 
             {/* Scores: one badge inline; the rest roll into a "+N" pill that
-                opens a table of all scores. */}
-            {shouldRenderScores && (
+                opens a table of all scores. Correction presence sits beside. */}
+            {(shouldRenderScores || nodeHasCorrection) && (
               <span className="flex min-w-0 items-center gap-1">
-                <GroupedScoreBadges
-                  maxVisible={1}
-                  scores={nodeScores}
-                  color={chipColor}
-                />
+                {shouldRenderScores && (
+                  <GroupedScoreBadges
+                    maxVisible={1}
+                    scores={nodeScores}
+                    color={chipColor}
+                  />
+                )}
+                {nodeHasCorrection && (
+                  <CorrectedPresenceBadge
+                    color={chipColor}
+                    onClick={handleCorrectedPresenceClick}
+                  />
+                )}
               </span>
             )}
           </div>
