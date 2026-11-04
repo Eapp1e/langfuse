@@ -1,6 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import {
+  normalizeStorageReadPrefix,
+  STORAGE_ROLE_READ_ACTIONS,
+} from "@langfuse/shared";
 
 import { PasswordInput } from "@/src/components/design-system/PasswordInput/PasswordInput";
 import { SelectInput } from "@/src/components/design-system/SelectInput/SelectInput";
@@ -16,8 +20,8 @@ import {
   FormMessage,
 } from "@/src/components/ui/form";
 import { Input } from "@/src/components/ui/input";
-import { RoleAuthSetupInstructions } from "@/src/features/external-media-storage/components/RoleAuthSetupInstructions/RoleAuthSetupInstructions";
-import { type RevealableExternalId } from "@/src/features/external-media-storage/components/RoleAuthSetupInstructions/types";
+import { RoleAuthSetupInstructions } from "@/src/components/RoleAuthSetupInstructions/RoleAuthSetupInstructions";
+import { type RevealableExternalId } from "@/src/components/RoleAuthSetupInstructions/types";
 import {
   externalMediaStorageFormSchema,
   type ExternalMediaStorageFormValues,
@@ -296,7 +300,9 @@ export function ExternalMediaStorageForm({
                 externalId={externalId}
                 roleArn={roleArn ?? ""}
                 bucketName={bucketName}
-                prefix={prefix}
+                prefix={normalizeStorageReadPrefix(prefix)}
+                actions={STORAGE_ROLE_READ_ACTIONS}
+                description="Let the Langfuse access role assume your role with this external ID, then grant the role read access to the bucket. If the bucket uses SSE-KMS, also allow the role to use kms:Decrypt on the key."
               />
             ) : null}
           </form>

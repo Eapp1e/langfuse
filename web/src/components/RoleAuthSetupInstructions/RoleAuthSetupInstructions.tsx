@@ -1,11 +1,12 @@
 import {
-  buildStorageRoleReadPermissionPolicy,
+  buildStorageRolePermissionPolicy,
   buildStorageRoleTrustPolicy,
+  type StorageRoleActions,
 } from "@langfuse/shared";
 
 import { CodeSection } from "@/src/components/design-system/CodeSection/CodeSection";
-import { MaskedExternalId } from "@/src/features/external-media-storage/components/RoleAuthSetupInstructions/MaskedExternalId";
-import { type RevealableExternalId } from "@/src/features/external-media-storage/components/RoleAuthSetupInstructions/types";
+import { MaskedExternalId } from "@/src/components/RoleAuthSetupInstructions/MaskedExternalId";
+import { type RevealableExternalId } from "@/src/components/RoleAuthSetupInstructions/types";
 
 export function RoleAuthSetupInstructions({
   accessRoleArn,
@@ -13,12 +14,16 @@ export function RoleAuthSetupInstructions({
   roleArn,
   bucketName,
   prefix,
+  actions,
+  description,
 }: {
   accessRoleArn: string;
   externalId: RevealableExternalId;
   roleArn: string;
   bucketName: string;
   prefix: string | null | undefined;
+  actions: StorageRoleActions;
+  description: string;
 }) {
   if (!externalId.isSet) {
     return (
@@ -31,11 +36,7 @@ export function RoleAuthSetupInstructions({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-sm">
-        Let the Langfuse access role assume your role with this external ID,
-        then grant the role read access to the bucket. If the bucket uses
-        SSE-KMS, also allow the role to use kms:Decrypt on the key.
-      </p>
+      <p className="text-muted-foreground text-sm">{description}</p>
       <CodeSection title="Langfuse access role" content={accessRoleArn} />
       {externalId.value ? (
         <>
@@ -63,10 +64,11 @@ export function RoleAuthSetupInstructions({
         title="Permission policy"
         language="json"
         content={JSON.stringify(
-          buildStorageRoleReadPermissionPolicy({
+          buildStorageRolePermissionPolicy({
             roleArn: roleArn || "arn:aws:iam::123456789012:role/role-name",
             bucketName: bucketName || "bucket-name",
             prefix,
+            actions,
           }),
           null,
           2,
