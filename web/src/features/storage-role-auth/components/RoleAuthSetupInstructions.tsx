@@ -5,8 +5,8 @@ import {
 } from "@langfuse/shared";
 
 import { CodeSection } from "@/src/components/design-system/CodeSection/CodeSection";
-import { MaskedExternalId } from "@/src/components/RoleAuthSetupInstructions/MaskedExternalId";
-import { type RevealableExternalId } from "@/src/components/RoleAuthSetupInstructions/types";
+import { MaskedExternalId } from "@/src/features/storage-role-auth/components/MaskedExternalId";
+import { type RevealableExternalId } from "@/src/features/storage-role-auth/components/types";
 
 export function RoleAuthSetupInstructions({
   accessRoleArn,

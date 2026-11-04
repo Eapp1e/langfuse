@@ -18,7 +18,7 @@ import {
   STORAGE_ROLE_WRITE_ACTIONS,
   StorageIntegrationAuthType,
 } from "@langfuse/shared";
-import { RoleAuthSetupInstructions } from "@/src/components/RoleAuthSetupInstructions/RoleAuthSetupInstructions";
+import { RoleAuthSetupInstructions } from "@/src/features/storage-role-auth/components/RoleAuthSetupInstructions";
 import { useLangfuseCloudRegion } from "@/src/features/organizations/hooks";
 import {
   type BlobStorageFormControl,
@@ -176,9 +176,7 @@ export const StorageProviderFields = ({
               </FormControl>
               <FormDescription>
                 {integrationType === "S3"
-                  ? usesRole
-                    ? "The bucket's AWS region (e.g., us-east-1)"
-                    : "AWS region (e.g., us-east-1)"
+                  ? "AWS region (e.g., us-east-1)"
                   : "S3 compatible storage region (e.g. europe-west1, auto)"}
               </FormDescription>
               <FormMessage />
