@@ -220,9 +220,6 @@ export function ConnectedSessionListBody({
       search={search}
       isLoading={tracesState.type === "loading"}
       renderSidebar={sidebar}
-      customization={
-        onCustomizeView ? { activeFilterCount, onCustomizeView } : undefined
-      }
     >
       {content}
     </SessionViewLayout>

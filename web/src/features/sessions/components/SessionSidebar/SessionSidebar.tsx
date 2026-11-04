@@ -1,7 +1,5 @@
 import { type ReactNode } from "react";
-import { Filter, Search } from "@langfuse/icons";
-import { Tooltip } from "@/src/components/design-system/Tooltip/Tooltip";
-import { IconButton } from "@/src/components/design-system/IconButton/IconButton";
+import { Search } from "@langfuse/icons";
 import { Input } from "@/src/components/ui/input";
 
 export function SessionSidebar({
@@ -22,7 +20,6 @@ export function SessionSidebar({
   };
   isListScrolled?: boolean;
 }) {
-  const customization = search?.customization;
   return (
     <div
       role="complementary"
@@ -48,22 +45,6 @@ export function SessionSidebar({
                 className="h-8 rounded-sm bg-transparent pl-7 font-mono text-xs"
               />
             </div>
-            {customization && (
-              <Tooltip
-                label={`Customize view${customization.activeFilterCount > 0 ? ` (${customization.activeFilterCount})` : ""}`}
-              >
-                {({ getTriggerProps }) => (
-                  <IconButton
-                    {...getTriggerProps()}
-                    icon={Filter}
-                    size="md"
-                    variant="outline"
-                    label="Customize view"
-                    onClick={customization.onCustomizeView}
-                  />
-                )}
-              </Tooltip>
-            )}
           </div>
           {isListScrolled && (
             <div

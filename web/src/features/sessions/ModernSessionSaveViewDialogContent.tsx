@@ -21,7 +21,7 @@ export function ModernSessionSaveViewDialogContent({
 
   return (
     <Dialog title="Save as new view">
-      <Dialog.Body>
+      <Dialog.Body padding="horizontal">
         <div>
           <label
             htmlFor="modern-session-view-name"
