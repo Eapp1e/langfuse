@@ -20,6 +20,7 @@
 
 import { type ObservationReturnTypeWithMetadata } from "@/src/server/api/routers/traces";
 import { cn } from "@/src/utils/tailwind";
+import { deepParseJson } from "@langfuse/shared";
 import { useCallback, useMemo, useState } from "react";
 import { Switch } from "@/src/components/design-system/Switch/Switch";
 import { HoverCard } from "@/src/components/design-system/HoverCard/HoverCard";
@@ -97,6 +98,7 @@ export function ConnectedObservationDetailView({
   const { isV4: isV4Enabled } = useReadPath();
   const internalFeaturesEnabled = useInternalFeaturesEnabled();
   const {
+    trace,
     observations,
     roots,
     nodeMap,
@@ -269,7 +271,17 @@ export function ConnectedObservationDetailView({
   );
 
   const outputCorrection = getMostRecentCorrection(observationCorrections);
-  const traceOutputCorrection = getMostRecentCorrection(traceCorrections);
+  // Trace-level CORRECTIONs only on the root observation — child spans must
+  // not show/diff a Trace field against their own output.
+  const traceOutputCorrection = isRoot
+    ? getMostRecentCorrection(traceCorrections)
+    : undefined;
+  const traceActualOutput = useMemo(() => {
+    if (!isRoot || trace.output == null || trace.output === "") {
+      return undefined;
+    }
+    return deepParseJson(trace.output);
+  }, [isRoot, trace.output]);
 
   // Fetch and parse observation input/output in background (Web Worker)
   // This combines tRPC fetch + non-blocking JSON parsing
@@ -501,6 +513,7 @@ export function ConnectedObservationDetailView({
                     : undefined,
                   outputCorrection,
                   traceOutputCorrection,
+                  traceActualOutput,
                   metadata: observationWithIOCompat.data?.metadata ?? undefined,
                   parsedInput,
                   parsedOutput,
