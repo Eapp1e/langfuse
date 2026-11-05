@@ -4,7 +4,12 @@ import type {
 } from "@langfuse/shared/src/db";
 import { LangfuseNotFoundError } from "@langfuse/shared";
 import { decrypt } from "@langfuse/shared/encryption";
-import { logger, redis as defaultRedis } from "@langfuse/shared/src/server";
+import {
+  createSecureLlmFetch,
+  decryptAndParseExtraHeaders,
+  logger,
+  redis as defaultRedis,
+} from "@langfuse/shared/src/server";
 import type { Cluster, Redis } from "ioredis";
 
 import { auditLog } from "@/src/features/audit-logs/auditLog";
@@ -62,7 +67,9 @@ export class GatewayModelCatalogService {
 
   constructor(
     private readonly prisma: PrismaClient,
-    private readonly fetcher: typeof fetch = fetch,
+    private readonly fetcher: typeof fetch = createSecureLlmFetch({
+      logContext: "AI Gateway model discovery",
+    }),
     private readonly redis: Redis | Cluster | null = defaultRedis,
   ) {
     this.repository = new GatewayProviderRepository(prisma);
@@ -297,6 +304,8 @@ export class GatewayModelCatalogService {
     const models = await getModelDiscoveryAdapter(provider).fetchCatalog({
       credential,
       config: connection.config,
+      baseURL: connection.baseURL,
+      extraHeaders: decryptAndParseExtraHeaders(connection.extraHeaders) ?? {},
       fetcher: this.fetcher,
     });
     if (!models.success) {
