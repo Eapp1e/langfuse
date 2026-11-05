@@ -23,6 +23,7 @@ import { ProviderCardPicker } from "@/src/features/ai-gateway/components/Gateway
 import { SecretKeyField } from "@/src/features/ai-gateway/components/GatewaySetupPage/components/ProviderDialogController/components/SecretKeyField/SecretKeyField";
 import { providerLabels } from "@/src/features/ai-gateway/constants/providerLabels";
 import { getAvailableGatewayProviders } from "@/src/features/ai-gateway/fns/getAvailableGatewayProviders";
+import { isGatewayPreReleaseEnvironment } from "@/src/features/ai-gateway/fns/isGatewayPreReleaseEnvironment";
 import { isGatewayConnectionNameError } from "@/src/features/ai-gateway/fns/isGatewayConnectionNameError";
 import { isGatewayHipaaNoticeVisible } from "@/src/features/ai-gateway/fns/isGatewayHipaaNoticeVisible";
 import { useLangfuseCloudRegion } from "@/src/features/organizations/hooks";
@@ -119,14 +120,20 @@ export function ProviderDialogController({
   };
 
   /**
-   * Bedrock has no custom endpoint. A blank header value keeps the stored value
-   * on save, but a test cannot read stored values, so tests drop those rows.
+   * Bedrock has no custom endpoint, and custom endpoints are pre-release only.
+   * A blank header value keeps the stored value on save, but a test cannot read
+   * stored values, so tests drop those rows.
    */
   const getEndpoint = (
     selectedConnection: GatewayConnection | null,
     options: { keepBlankValues: boolean },
   ) => {
-    if ((selectedConnection?.provider ?? provider) === "BEDROCK") return {};
+    if (
+      !isGatewayPreReleaseEnvironment() ||
+      (selectedConnection?.provider ?? provider) === "BEDROCK"
+    ) {
+      return {};
+    }
     const headers = extraHeaders.filter(
       (header) =>
         header.key.trim() && (options.keepBlankValues || header.value),
@@ -328,7 +335,8 @@ export function ProviderDialogController({
                 hasSavedKey={Boolean(selectedConnection)}
                 onCredentialChange={setCredential}
               />
-              {dialogProvider !== "BEDROCK" ? (
+              {isGatewayPreReleaseEnvironment() &&
+              dialogProvider !== "BEDROCK" ? (
                 <AdvancedSettings
                   provider={dialogProvider}
                   baseURL={baseURL}
